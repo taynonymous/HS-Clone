@@ -1,0 +1,134 @@
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --border: #dde1e6;
+  --text: #16191d;
+  --muted: #69717c;
+  --accent: #2557d6;
+  --ok: #138a4a;
+  --ok-bg: #dcf5e7;
+  --bad: #b42318;
+  --bad-bg: #fde7e5;
+  --warn: #9a6200;
+  --warn-bg: #fff2d6;
+  --neutral-bg: #eceff3;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1216;
+    --surface: #171b21;
+    --border: #2a3039;
+    --text: #e7eaee;
+    --muted: #8e97a3;
+    --accent: #6d95ff;
+    --ok: #4ade80;
+    --ok-bg: #12301f;
+    --bad: #f87171;
+    --bad-bg: #3a1716;
+    --warn: #fbbf24;
+    --warn-bg: #3a2c0d;
+    --neutral-bg: #232932;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+a { color: var(--accent); }
+h1 { font-size: 1.25rem; margin: 0; }
+h2 { font-size: 1.05rem; margin: 0 0 .75rem; display: inline; }
+section { margin-bottom: 2rem; }
+.muted { color: var(--muted); }
+.error { color: var(--bad); min-height: 1.2em; margin: 0; }
+
+header {
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .75rem;
+  padding: .9rem 16px; border-bottom: 1px solid var(--border); background: var(--surface);
+  position: sticky; top: 0; z-index: 5;
+}
+.header-right { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+main { max-width: 1100px; margin: 0 auto; padding: 1.25rem 16px; }
+.section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: .75rem; }
+
+.btn {
+  font: inherit; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  padding: .4rem .8rem; border-radius: 8px; text-decoration: none; display: inline-block; white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-buy { background: var(--ok); border-color: var(--ok); color: #fff; font-weight: 600; }
+.btn-sm { padding: .2rem .55rem; font-size: .85rem; }
+.btn:disabled { opacity: .5; cursor: progress; }
+
+.pill { font-size: .78rem; font-weight: 600; padding: .15rem .55rem; border-radius: 999px; white-space: nowrap; }
+.pill-in_stock { background: var(--ok-bg); color: var(--ok); }
+.pill-out_of_stock { background: var(--bad-bg); color: var(--bad); }
+.pill-blocked, .pill-error { background: var(--warn-bg); color: var(--warn); }
+.pill-unknown, .pill-paused { background: var(--neutral-bg); color: var(--muted); }
+.pill-live { background: var(--ok-bg); color: var(--ok); }
+
+.items { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: .9rem; }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: .9rem 1rem;
+  display: flex; flex-direction: column; gap: .5rem; min-width: 0;
+}
+.card.in_stock { border-color: var(--ok); box-shadow: 0 0 0 2px var(--ok-bg); }
+.card-top { display: flex; justify-content: space-between; gap: .5rem; align-items: start; }
+.card-title { font-weight: 600; overflow-wrap: anywhere; }
+.card-meta { font-size: .85rem; color: var(--muted); display: grid; grid-template-columns: auto 1fr; gap: .1rem .6rem; }
+.card-meta dd { margin: 0; overflow-wrap: anywhere; }
+.card-meta dt { white-space: nowrap; }
+.evidence { font: .78rem/1.35 ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--neutral-bg); padding: .35rem .5rem; border-radius: 6px; overflow-wrap: anywhere; max-height: 5.5em; overflow: auto; }
+.card-actions { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: auto; }
+.price-over { color: var(--bad); }
+
+.events { list-style: none; margin: 0; padding: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; max-height: 320px; overflow: auto; }
+.events li { padding: .45rem .9rem; border-bottom: 1px solid var(--border); font-size: .88rem; display: flex; gap: .7rem; }
+.events li:last-child { border-bottom: 0; }
+.events:empty { display: none; }
+.events li > span { min-width: 0; overflow-wrap: anywhere; }
+.events time { color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.events .ev-restock { color: var(--ok); font-weight: 600; }
+.events .ev-warn { color: var(--warn); }
+
+details > summary { cursor: pointer; list-style: revert; }
+details > summary h2 { margin: 0; }
+.form { display: flex; flex-direction: column; gap: .7rem; }
+.form fieldset { border: 1px solid var(--border); border-radius: 10px; padding: .6rem .9rem .9rem; display: flex; flex-direction: column; gap: .55rem; margin: 0; }
+.form legend { font-weight: 600; padding: 0 .3rem; }
+.form label { display: flex; flex-direction: column; gap: .2rem; font-size: .88rem; color: var(--muted); }
+.form label.toggle { flex-direction: row; align-items: center; gap: .4rem; color: var(--text); }
+.form input:not([type=checkbox]), .form select, .form textarea {
+  font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: .4rem .55rem; width: 100%;
+}
+.form textarea { font-family: ui-monospace, Menlo, monospace; font-size: .85rem; }
+.form .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: .6rem; }
+.form-actions { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+#settings { margin-top: .9rem; }
+.toggle { display: inline-flex; align-items: center; gap: .35rem; font-size: .9rem; }
+
+dialog { border: 1px solid var(--border); border-radius: 14px; background: var(--surface); color: var(--text); width: min(620px, calc(100vw - 32px)); padding: 1.1rem; }
+dialog::backdrop { background: rgb(0 0 0 / .45); }
+dialog h3 { margin: 0; }
+
+.banner {
+  position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
+  background: var(--ok); color: #fff; padding: .9rem 16px; font-size: 1.05rem; animation: pulse 1s ease-in-out infinite alternate;
+}
+.banner .btn { background: #fff; color: var(--ok); border-color: #fff; }
+.banner .btn-buy { font-size: 1.05rem; }
+.banner-actions { display: flex; gap: .5rem; }
+@keyframes pulse { from { filter: brightness(1); } to { filter: brightness(1.15); } }
+@media (prefers-reduced-motion: reduce) { .banner { animation: none; } }
+
+@media (max-width: 560px) {
+  .items { grid-template-columns: 1fr; }
+  .form .row { grid-template-columns: 1fr; }
+}

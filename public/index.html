@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HS-Clone</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="banner" class="banner" hidden>
+    <div>
+      <strong id="banner-title">IN STOCK</strong>
+      <span id="banner-sub"></span>
+    </div>
+    <div class="banner-actions">
+      <a id="banner-buy" class="btn btn-buy" target="_blank" rel="noopener">Buy now</a>
+      <button id="banner-dismiss" class="btn">Dismiss</button>
+    </div>
+  </div>
+
+  <header>
+    <h1>🔥 HS-Clone</h1>
+    <div class="header-right">
+      <span id="conn" class="pill pill-unknown" title="Live updates">offline</span>
+      <button id="enable-alerts" class="btn">Enable browser alerts</button>
+      <label class="toggle" title="Open the product/cart page automatically on restock (allow pop-ups for this site)">
+        <input type="checkbox" id="auto-open"> Auto-open
+      </label>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <div class="section-head">
+        <h2>Watchlist</h2>
+        <button id="add-btn" class="btn btn-primary">+ Add product</button>
+      </div>
+      <div id="items" class="items"></div>
+      <p id="empty" class="muted" hidden>Nothing watched yet. Add a product URL to start.</p>
+    </section>
+
+    <section>
+      <h2>Activity</h2>
+      <ul id="events" class="events"></ul>
+    </section>
+
+    <section>
+      <details id="settings-wrap">
+        <summary><h2>Settings &amp; notifications</h2></summary>
+        <form id="settings" class="form">
+          <fieldset>
+            <legend>ntfy (phone push — recommended)</legend>
+            <p class="muted">Install the <a href="https://ntfy.sh" target="_blank" rel="noopener">ntfy</a> app and subscribe to the same hard-to-guess topic.</p>
+            <label>Server <input name="ntfyServer" placeholder="https://ntfy.sh"></label>
+            <label>Topic <input name="ntfyTopic" placeholder="ps5pro-a8f3k2..."></label>
+            <label>Access token (optional) <input name="ntfyToken" type="password" autocomplete="off"></label>
+          </fieldset>
+          <fieldset>
+            <legend>Other channels</legend>
+            <label>Discord webhook URL <input name="discordWebhook" type="password" autocomplete="off"></label>
+            <label>Generic webhook URL (JSON POST) <input name="webhookUrl"></label>
+          </fieldset>
+          <fieldset>
+            <legend>Checking</legend>
+            <label>Best Buy API key (strongly recommended for Best Buy) <input name="bestbuyApiKey" type="password" autocomplete="off"></label>
+            <label>Default interval (sec) <input name="defaultIntervalSec" type="number" min="1"></label>
+            <label>Min gap between requests to same host (sec) <input name="minHostGapSec" type="number" min="0"></label>
+            <label>Alert cooldown per item (sec) <input name="alertCooldownSec" type="number" min="0"></label>
+            <label>User-Agent override <input name="userAgent" placeholder="(default desktop Chrome UA)"></label>
+          </fieldset>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="button" id="test-alert" class="btn">Send test alert</button>
+            <span id="settings-msg" class="muted"></span>
+          </div>
+        </form>
+      </details>
+    </section>
+  </main>
+
+  <dialog id="item-dialog">
+    <form id="item-form" class="form" method="dialog">
+      <h3 id="item-dialog-title">Add product</h3>
+      <input type="hidden" name="id">
+      <label>Product URL <input name="url" type="url" required placeholder="https://www.bestbuy.com/site/6601524.p"></label>
+      <label>Name <input name="name" placeholder="PS5 Pro — Best Buy"></label>
+      <div class="row">
+        <label>Retailer <select name="retailer"></select></label>
+        <label>Interval (sec) <input name="intervalSec" type="number" min="1"></label>
+        <label>Max price ($) <input name="maxPrice" type="number" step="0.01" min="0" placeholder="e.g. 760"></label>
+      </div>
+      <details>
+        <summary>Advanced: custom detection regexes</summary>
+        <p class="muted">One regex per line (case-insensitive). If set, these replace the retailer preset. Out-of-stock wins when both match.</p>
+        <label>In-stock patterns <textarea name="inStockPatterns" rows="3" placeholder='"availability_status":"IN_STOCK"'></textarea></label>
+        <label>Out-of-stock patterns <textarea name="outOfStockPatterns" rows="3" placeholder="Sold Out"></textarea></label>
+      </details>
+      <label class="toggle"><input type="checkbox" name="enabled" checked> Enabled</label>
+      <p id="item-error" class="error"></p>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" id="item-cancel" class="btn">Cancel</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
