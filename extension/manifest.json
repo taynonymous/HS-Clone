@@ -13,6 +13,7 @@
     {
       "matches": [
         "https://www.bestbuy.com/*",
+        "https://api.bestbuy.com/click/*",
         "https://www.amazon.com/*",
         "https://direct.playstation.com/*",
         "https://my.account.sony.com/*"

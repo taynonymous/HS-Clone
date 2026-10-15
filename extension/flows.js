@@ -24,8 +24,15 @@ globalThis.HS_FLOWS = {
       highlight: { text: /place (your )?order/i },
     },
     {
+      // api.bestbuy.com/click/-/<sku>/cart adds the SKU via JS, then redirects
+      // to the cart. If that stalls, go to the cart anyway.
+      name: 'click-to-cart',
+      url: /api\.bestbuy\.com\/click\//,
+      actions: [{ navigate: 'https://www.bestbuy.com/cart', delayMs: 8_000 }],
+    },
+    {
       name: 'cart',
-      url: /bestbuy\.com\/cart/,
+      url: /www\.bestbuy\.com\/cart/,
       actions: [{ click: { text: /^checkout$/i, selector: '[data-track="Checkout - Top"], .checkout-buttons__checkout button' }, timeoutMs: 20_000 }],
     },
     {
@@ -50,9 +57,15 @@ globalThis.HS_FLOWS = {
       highlight: { text: /place (your )?order/i, selector: '#placeYourOrder, #submitOrderButtonId' },
     },
     {
+      // The cart-add link redirects (signed in) to /associates/addtocart.
       name: 'cart-add-confirm',
-      url: /amazon\.com\/gp\/aws\/cart\/add/,
-      actions: [{ click: { selector: 'input[name="add"]', text: /^(continue|add to cart)$/i }, timeoutMs: 10_000 }],
+      url: /amazon\.com\/(gp\/aws\/cart\/add|associates\/addtocart)/,
+      actions: [
+        {
+          click: { selector: 'input[name="add"], input[name="submit.addToCart"]', text: /^(continue|add to cart)$/i },
+          timeoutMs: 10_000,
+        },
+      ],
     },
     {
       name: 'cart',

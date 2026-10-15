@@ -60,8 +60,8 @@ The extension refuses to click any button whose label matches "Place order", "Su
 
 | Retailer | Steps |
 |---|---|
-| Best Buy | add-to-cart link → cart → **Checkout** → review |
-| Amazon | cart-add link → **Continue** → cart → **Proceed to checkout** → review. It never uses "Buy Now" (1-Click). |
+| Best Buy | add-to-cart link → cart (falls back to opening the cart directly if the link stalls for 8s) → **Checkout** → review |
+| Amazon | cart-add link → `/associates/addtocart` **Add to Cart** → cart → **Proceed to checkout** → review. It never uses "Buy Now" (1-Click). |
 | PS Direct | product page: waits up to 5 min for **Add to Cart** to appear → cart → **Checkout** → review |
 
 It only acts on tabs that it opened from an alert in the last 10 minutes. Your normal browsing on these sites is never touched. A banner on the page shows progress and has a **Stop assist** button. If it hits a sign-in page or an unknown layout, it stops and notifies you.

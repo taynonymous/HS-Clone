@@ -35,7 +35,9 @@ test('no flow step targets a forbidden label', () => {
 
 test('flows route each checkout page to the right step', () => {
   const stepFor = (r, url) => FLOWS[r].find((s) => s.url.test(url))?.name;
+  assert.equal(stepFor('bestbuy', 'https://api.bestbuy.com/click/-/6601524/cart'), 'click-to-cart');
   assert.equal(stepFor('bestbuy', 'https://www.bestbuy.com/cart'), 'cart');
+  assert.equal(stepFor('amazon', 'https://www.amazon.com/associates/addtocart?ASIN.1=X&Quantity.1=1'), 'cart-add-confirm');
   assert.equal(stepFor('bestbuy', 'https://www.bestbuy.com/checkout/r/fast-track'), 'review');
   assert.equal(stepFor('bestbuy', 'https://www.bestbuy.com/identity/signin?token=x'), 'signin');
   assert.equal(stepFor('amazon', 'https://www.amazon.com/gp/aws/cart/add.html?ASIN.1=X'), 'cart-add-confirm');

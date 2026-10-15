@@ -29,14 +29,18 @@ const page = (body, delayed = '') => `<!doctype html><html><head><title>fake</ti
   <script>setTimeout(() => { ${delayed} }, 700)</script></body></html>`;
 
 const FAKE = {
-  'https://api.bestbuy.com/click/-/6601524/cart': { redirect: 'https://www.bestbuy.com/cart' },
+  // Stalled add-to-cart page (as seen when its XHR is blocked) → exercises the 8s fallback.
+  'https://api.bestbuy.com/click/-/6601524/cart': page('<title>Add to Cart</title><a href="https://www.bestbuy.com/cart?cmp=RMX">cart</a>'),
   'https://www.bestbuy.com/cart': page('<div id="root">loading…</div>' + '<button onclick="document.title=\'ORDERED\'">Buy Now</button>',
     `root.innerHTML = '<button onclick="location.href=\\'/checkout/r/fast-track\\'">Checkout</button>'`),
   'https://www.bestbuy.com/checkout/r/fast-track': page(ORDER_BUTTONS),
 
+  // Real behavior: the cart-add link redirects to /associates/addtocart when signed in.
   'https://www.amazon.com/gp/aws/cart/add.html?ASIN.1=B0DGY63Z2H&Quantity.1=1':
-    page('<form action="/gp/cart/view.html"><input type="submit" name="add" value="Continue"></form>'),
-  'https://www.amazon.com/gp/cart/view.html?add=Continue':
+    { redirect: 'https://www.amazon.com/associates/addtocart?ASIN.1=B0DGY63Z2H&Quantity.1=1' },
+  'https://www.amazon.com/associates/addtocart?ASIN.1=B0DGY63Z2H&Quantity.1=1':
+    page('<button onclick="document.title=\'ORDERED\'">Buy Now</button><form action="/gp/cart/view.html"><input type="submit" name="add" value="Add to Cart"></form>'),
+  'https://www.amazon.com/gp/cart/view.html?add=Add+to+Cart':
     page('<form action="/gp/buy/spc/handlers/display.html"><input type="submit" name="proceedToRetailCheckout" value="Proceed to checkout"></form>'),
   'https://www.amazon.com/gp/buy/spc/handlers/display.html?proceedToRetailCheckout=Proceed+to+checkout': page(ORDER_BUTTONS),
 
@@ -113,7 +117,7 @@ try {
     await fetch(`${base}/api/items/${item.id}/check`, { method: 'POST', headers: auth });
     const tab = await opened;
     try {
-      await tab.waitForURL(c.review, { timeout: 15_000 });
+      await tab.waitForURL(c.review, { timeout: 25_000 });
       const btn = tab.locator('#po');
       await btn.waitFor();
       await tab.waitForFunction(() => document.querySelector('#po').style.outline.includes('5px'), null, { timeout: 10_000 });
