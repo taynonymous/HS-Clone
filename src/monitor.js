@@ -148,6 +148,7 @@ export class Monitor extends EventEmitter {
       name: item.name,
       url: item.url,
       cartUrl: cartUrlFor(item),
+      retailer: item.retailer,
       retailerLabel: preset(item.retailer).label,
       price: s.price ?? null,
       at: s.lastAlertAt,

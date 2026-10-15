@@ -1,0 +1,35 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>HS-Clone Checkout Assist</title><link rel="stylesheet" href="ui.css">
+<style>body { max-width: 560px; margin: 0 auto; padding: 20px 16px; }</style>
+</head><body>
+<h1>🔥 HS-Clone Checkout Assist</h1>
+<p class="muted">When HS-Clone reports a restock, this opens the cart in a focused tab and steps through checkout to the order-review page. It never clicks <b>Place order</b> or <b>Buy Now</b>. Stay signed in on each retailer with your payment and address saved.</p>
+<form id="form" class="stack">
+  <fieldset>
+    <legend>HS-Clone server</legend>
+    <label>URL <input name="serverUrl" type="url" required placeholder="http://192.168.1.10:8080"></label>
+    <label>Username <input name="username" autocomplete="off"></label>
+    <label>Password (APP_PASSWORD, if set) <input name="password" type="password" autocomplete="off"></label>
+  </fieldset>
+  <fieldset>
+    <legend>Behavior</legend>
+    <label class="row"><input type="checkbox" name="enabled"> Enabled</label>
+    <label class="row"><input type="checkbox" name="focusWindow"> Focus the Chrome window on alert</label>
+    <label class="row"><input type="checkbox" name="assist.psdirect"> Walk checkout on PlayStation Direct</label>
+    <label class="row"><input type="checkbox" name="assist.bestbuy"> Walk checkout on Best Buy</label>
+    <label class="row"><input type="checkbox" name="assist.amazon"> Walk checkout on Amazon</label>
+  </fieldset>
+  <div class="actions">
+    <button class="primary" type="submit">Save</button>
+    <span id="status" class="muted"></span>
+  </div>
+</form>
+<fieldset style="margin-top:20px">
+  <legend>Dry run</legend>
+  <p class="muted" style="margin:0">Paste a cheap in-stock product URL from a supported retailer. The assist adds it to the cart and stops at review, so nothing is ordered. Empty your cart afterwards.</p>
+  <label>Product URL <input id="dry-url" type="url" placeholder="https://www.bestbuy.com/site/....p"></label>
+  <div class="actions"><button id="dry-run" type="button">Run</button><span id="dry-status" class="muted"></span></div>
+</fieldset>
+<p class="muted">To test the alert path end to end, click <b>Send test alert</b> in the HS-Clone web UI. You should get a "connected" notification.</p>
+<script src="options.js"></script>
+</body></html>

@@ -52,6 +52,30 @@ Statuses: `in_stock`, `out_of_stock`, `unknown` (nothing matched), `blocked` (bo
 - **Generic webhook**: JSON POST `{event, title, name, url, cartUrl, price, retailerLabel, at}`.
 - **Browser**: Notification API, a beep, a banner, and an optional auto-open.
 
+## Chrome extension: checkout assist
+
+`extension/` is a Manifest V3 extension (Chrome 116+). It keeps a WebSocket open to your HS-Clone server. When a restock alert arrives, it opens the cart in a focused tab of **your signed-in Chrome**. It then steps through checkout to the order-review page and highlights the final button. **You click Place order.**
+
+The extension refuses to click any button whose label matches "Place order", "Submit order", "Buy Now", "Pay now", "1-Click" and similar, whatever the flow says. This is enforced in `content.js` and unit-tested.
+
+| Retailer | Steps |
+|---|---|
+| Best Buy | add-to-cart link → cart → **Checkout** → review |
+| Amazon | cart-add link → **Continue** → cart → **Proceed to checkout** → review. It never uses "Buy Now" (1-Click). |
+| PS Direct | product page: waits up to 5 min for **Add to Cart** to appear → cart → **Checkout** → review |
+
+It only acts on tabs that it opened from an alert in the last 10 minutes. Your normal browsing on these sites is never touched. A banner on the page shows progress and has a **Stop assist** button. If it hits a sign-in page or an unknown layout, it stops and notifies you.
+
+Setup:
+
+1. `chrome://extensions` → enable Developer mode → **Load unpacked** → select `extension/`.
+2. Open the extension's settings. Set the server URL, for example `http://192.168.1.10:8080`, plus the username and password if `APP_PASSWORD` is set. The toolbar badge clears once it connects.
+3. In the HS-Clone UI, click **Send test alert**. You should get a "connected" notification from Chrome.
+4. Optional: use **Dry run** in the extension settings with a cheap in-stock product. It walks to the review page without ordering. Empty your cart afterwards.
+5. Stay signed in on each retailer with your card and address saved, and keep Chrome running.
+
+Retailer markup changes. Steps match on button text first and CSS selector second, and they live in `extension/flows.js`.
+
 ## Config
 
 Environment variables (see `.env.example`):
@@ -73,6 +97,7 @@ Settings are stored in `db.json`. Don't expose the app publicly without `APP_PAS
 GET    /healthz
 GET    /api/state                      items, settings, recent events
 GET    /api/stream                     SSE: item | event | alert | removed
+GET    /api/ws[?auth=base64(user:pass)] WebSocket: {type: hello|ping|alert, payload?} (used by the extension)
 POST   /api/items                      {url, name?, retailer?, intervalSec?, maxPrice?, enabled?, inStockPatterns?, outOfStockPatterns?}
 PUT    /api/items/:id                  partial update
 DELETE /api/items/:id
@@ -83,11 +108,12 @@ POST   /api/test-alert
 
 ## Scope
 
-This is a monitor plus a one-tap path to the cart, which is the same model as HotStock. It doesn't auto-checkout, store retailer credentials, or try to evade bot protection. Those break retailer ToS and get accounts and orders cancelled. Speed comes from fast, reliable alerts and from staying signed in, with payment saved, on each retailer.
+This is a monitor plus a fast path to the order-review page. Placing the order stays a human click. It doesn't store retailer credentials or try to evade bot protection. Those break retailer ToS and get accounts and orders cancelled. Speed comes from fast, reliable alerts and from staying signed in, with payment saved, on each retailer.
 
 ## Dev
 
 ```sh
 npm test        # node:test, no deps
+npm i --no-save playwright && npm run test:e2e   # extension e2e in headless Chromium against local fixture pages
 npm run dev     # node --watch
 ```

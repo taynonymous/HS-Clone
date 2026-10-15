@@ -54,3 +54,35 @@ test('basic auth when APP_PASSWORD set', async (t) => {
   const auth = { Authorization: `Basic ${Buffer.from('admin:s3cret').toString('base64')}` };
   assert.equal((await fetch(`${base}/api/state`, { headers: auth })).status, 200);
 });
+
+test('WebSocket pushes alerts; requires auth when APP_PASSWORD set', async (t) => {
+  const { app, base } = await boot({ APP_PASSWORD: 'pw' });
+  t.after(() => app.close());
+  const wsBase = base.replace('http', 'ws') + '/api/ws';
+
+  const denied = new WebSocket(wsBase);
+  await new Promise((r) => (denied.onerror = denied.onclose = r));
+  assert.notEqual(denied.readyState, WebSocket.OPEN);
+
+  const ws = new WebSocket(`${wsBase}?auth=${Buffer.from('admin:pw').toString('base64')}`);
+  const msgs = [];
+  const got = (type) => new Promise((resolve) => {
+    const check = () => msgs.find((m) => m.type === type) && resolve(msgs.find((m) => m.type === type));
+    ws.onmessage = (e) => { msgs.push(JSON.parse(e.data)); check(); };
+    check();
+  });
+  await got('hello');
+  ws.send('ping'); // client keepalive frames must be tolerated
+
+  const auth = { Authorization: `Basic ${Buffer.from('admin:pw').toString('base64')}` };
+  const { items } = await (await fetch(`${base}/api/state`, { headers: auth })).json();
+  const bb = items.find((i) => i.retailer === 'bestbuy');
+  // fake fetch reports Target-style IN_STOCK; give the Best Buy item matching custom patterns
+  await fetch(`${base}/api/items/${bb.id}`, { method: 'PUT', headers: auth, body: JSON.stringify({ inStockPatterns: ['IN_STOCK'] }) });
+  await fetch(`${base}/api/items/${bb.id}/check`, { method: 'POST', headers: auth });
+  const alert = await got('alert');
+  assert.equal(alert.payload.retailer, 'bestbuy');
+  assert.equal(alert.payload.cartUrl, 'https://api.bestbuy.com/click/-/6601524/cart');
+  assert.equal((await (await fetch(`${base}/healthz`)).json()).wsClients, 1);
+  ws.close();
+});

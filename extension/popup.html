@@ -1,0 +1,18 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="ui.css">
+<style>body { width: 300px; padding: 14px; } dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 0 0 12px; } dt { color: var(--muted); } dd { margin: 0; overflow-wrap: anywhere; }</style>
+</head><body>
+<h1>🔥 HS-Clone Checkout Assist</h1>
+<dl>
+  <dt>Server</dt><dd id="server"></dd>
+  <dt>Status</dt><dd id="ws"></dd>
+  <dt>Last alert</dt><dd id="alert">—</dd>
+  <dt>Last step</dt><dd id="progress">—</dd>
+</dl>
+<label class="row"><input type="checkbox" id="enabled"> Enabled</label>
+<div class="actions" style="margin-top:12px">
+  <button id="reconnect">Reconnect</button>
+  <button id="options" class="primary">Settings</button>
+</div>
+<script src="popup.js"></script>
+</body></html>

@@ -7,6 +7,7 @@ import { Store, defaultData } from './store.js';
 import { Monitor } from './monitor.js';
 import { sendAlert } from './notify.js';
 import { PRESETS, cartUrlFor, detectRetailer } from './retailers.js';
+import { acceptWebSocket } from './ws.js';
 
 const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.json': 'application/json' };
@@ -89,14 +90,16 @@ function send(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
+// Basic auth via the Authorization header, or ?auth=<base64 user:pass> for
+// WebSocket clients (browsers can't set headers on a WebSocket handshake).
 function makeAuth(user, password) {
   if (!password) return () => true;
   const digest = (s) => createHash('sha256').update(s).digest();
   const expected = digest(`${user}:${password}`);
-  return (req) => {
-    const m = /^Basic (.+)$/.exec(req.headers.authorization ?? '');
-    if (!m) return false;
-    return timingSafeEqual(digest(Buffer.from(m[1], 'base64').toString()), expected);
+  return (req, url) => {
+    const b64 = /^Basic (.+)$/.exec(req.headers.authorization ?? '')?.[1] ?? url?.searchParams.get('auth');
+    if (!b64) return false;
+    return timingSafeEqual(digest(Buffer.from(b64, 'base64').toString()), expected);
   };
 }
 
@@ -117,17 +120,22 @@ export async function createApp({ env = process.env, fetchImpl = globalThis.fetc
   const monitor = new Monitor(store, { fetchImpl });
   const authorized = makeAuth(env.APP_USER || 'admin', env.APP_PASSWORD);
   const clients = new Set();
+  const wsClients = new Set();
 
   const broadcast = (type, payload) => {
-    const frame = `event: ${type}\ndata: ${JSON.stringify(payload)}\n\n`;
+    const json = JSON.stringify(payload);
+    const frame = `event: ${type}\ndata: ${json}\n\n`;
     for (const res of clients) res.write(frame);
+    if (type === 'alert') for (const ws of wsClients) ws.send(`{"type":"alert","payload":${json}}`);
   };
   monitor.on('item', (item) => broadcast('item', publicItem(item)));
   monitor.on('event', (ev) => broadcast('event', ev));
   monitor.on('alert', (alert) => broadcast('alert', alert));
+  // 20s keeps MV3 extension service workers (30s idle limit) alive.
   const heartbeat = setInterval(() => {
     for (const res of clients) res.write(': ping\n\n');
-  }, 25_000);
+    for (const ws of wsClients) ws.send('{"type":"ping"}');
+  }, 20_000);
   heartbeat.unref();
 
   const findItem = (id) => {
@@ -137,7 +145,7 @@ export async function createApp({ env = process.env, fetchImpl = globalThis.fetc
   };
 
   const routes = [
-    ['GET', /^\/healthz$/, () => ({ ok: true, items: store.data.items.length, sseClients: clients.size })],
+    ['GET', /^\/healthz$/, () => ({ ok: true, items: store.data.items.length, sseClients: clients.size, wsClients: wsClients.size })],
     ['GET', /^\/api\/state$/, () => ({
       items: store.data.items.map(publicItem),
       settings: store.data.settings,
@@ -205,7 +213,7 @@ export async function createApp({ env = process.env, fetchImpl = globalThis.fetc
   const server = http.createServer(async (req, res) => {
     const { pathname } = new URL(req.url, 'http://localhost');
     try {
-      if (pathname !== '/healthz' && !authorized(req)) {
+      if (pathname !== '/healthz' && !authorized(req, null)) {
         res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="hs-clone"' });
         return res.end('auth required');
       }
@@ -231,12 +239,26 @@ export async function createApp({ env = process.env, fetchImpl = globalThis.fetc
     }
   });
 
+  server.on('upgrade', (req, socket) => {
+    const url = new URL(req.url, 'http://localhost');
+    if (url.pathname !== '/api/ws' || !authorized(req, url)) {
+      socket.end('HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n');
+      return;
+    }
+    const ws = acceptWebSocket(req, socket);
+    if (!ws) return socket.destroy();
+    wsClients.add(ws);
+    ws.onclose = () => wsClients.delete(ws);
+    ws.send('{"type":"hello"}');
+  });
+
   if (startMonitor) monitor.start();
 
   const close = async () => {
     monitor.stop();
     clearInterval(heartbeat);
     for (const res of clients) res.end();
+    for (const ws of wsClients) ws.close();
     await new Promise((r) => server.close(r));
     await store.flush();
   };
